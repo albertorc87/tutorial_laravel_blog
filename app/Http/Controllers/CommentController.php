@@ -18,12 +18,6 @@ class CommentController extends Controller
      */
     public function store(CommentRequest $request)
     {
-        try {
-            $request->authorize();
-        } catch (AuthorizationException $e) {
-            return back()->withErrors(['msg', $e->getMessage()]);
-        }
-
         $request->validated();
 
         $user = Auth::user();
