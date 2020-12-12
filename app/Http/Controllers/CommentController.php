@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Auth\Access\AuthorizationException;
 use App\Http\Requests\CommentRequest;
 use App\Models\Comment;
 use App\Models\Post;
