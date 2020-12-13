@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Post;
+use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
@@ -37,11 +38,24 @@ class PostController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        abort_unless(Auth::check(), 404);
+        $user = $request->user();
+
+        if ($user->isAdmin()) {
+            $posts = Post::orderBy('created_at', 'desc')->get();
+        } elseif ($user->isStaff()) {
+            $posts = Post::where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
+        } else {
+            abort_unless(Auth::check(), 404);
+        }
+        return view('posts/list', [
+            'posts' => $posts
+        ]);
     }
 
     /**
