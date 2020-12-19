@@ -40,6 +40,13 @@
                         </a>
                     </li>
                     <li>{{ Auth::user()->name }}</li>
+                    @if( Auth::user()->isAdmin() or Auth::user()->isStaff() )
+                    <li>
+                        <a class="hover:text-blue-600" href="{{ route('posts.store') }}" title="Admin">
+                            <i class="fas fa-user-shield"></i>
+                        </a>
+                    </li>
+                    @endif
                     <li>
                         <a class="hover:text-blue-600" href="{{ route('logout') }}" title="logout" class="no-underline hover:underline" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i class="fas fa-sign-out-alt"></i></a>
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">

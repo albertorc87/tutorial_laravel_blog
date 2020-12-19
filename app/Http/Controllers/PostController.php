@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Post;
+use App\Http\Requests\PostRequest;
 use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
@@ -60,23 +61,42 @@ class PostController extends Controller
 
     /**
      * Show the form for creating a new resource.
-     *
+     * @param  \Illuminate\Http\Request
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+        abort_unless(Auth::check(), 404);
+        $request->user()->authorizeRoles(['is_staff', 'is_admin']);
+        return view('posts/create');
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\PostRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(PostRequest $request)
     {
-        //
+        $request->validated();
+        $user = Auth::user();
+
+        $request->user()->authorizeRoles(['is_staff', 'is_admin']);
+
+        $post = new Post;
+        $post->title = $request->input('title');
+        $post->body = $request->input('body');
+        $post->is_draft = $request->input('is_draft');
+        $post->user()->associate($user);
+
+        $res = $post->save();
+
+        if ($res) {
+            return back()->with('status', 'Post has been created sucessfully');
+        }
+
+        return back()->withErrors(['msg', 'There was an error saving the post, please try again later']);
     }
 
     /**
@@ -94,33 +114,69 @@ class PostController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
+     * @param  \Illuminate\Http\Request
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
-        //
+        abort_unless(Auth::check(), 404);
+        $request->user()->authorizeRoles(['is_staff', 'is_admin']);
+        $post = Post::find($id);
+        if (($post->user->id != $request->user()->id) && !$request->user()->isAdmin()) {
+            abort_unless(false, 401);
+        }
+        return view('posts/edit', [
+            'post' => $post
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\PostRequest  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(PostRequest $request, $id)
     {
-        //
+        $request->validated();
+        $request->user()->authorizeRoles(['is_staff', 'is_admin']);
+        $post = Post::find($id);
+        if (($post->user->id != $request->user()->id) && !$request->user()->isAdmin()) {
+            abort_unless(false, 401);
+        }
+
+        $post->title = $request->input('title');
+        $post->body = $request->input('body');
+        $post->is_draft = $request->input('is_draft');
+
+        $res = $post->save();
+
+        if ($res) {
+            return back()->with('status', 'Post has been updated sucessfully');
+        }
+
+        return back()->withErrors(['msg', 'There was an error updating the post, please try again later']);
     }
 
     /**
      * Remove the specified resource from storage.
      *
+     * @param  \Illuminate\Http\Request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        //
+        abort_unless(Auth::check(), 404);
+        $request->user()->authorizeRoles(['is_staff', 'is_admin']);
+        $post = Post::where('id', $id)->first();
+        if (($post->user->id != $request->user()->id) && !$request->user()->isAdmin()) {
+            abort_unless(false, 401);
+        }
+
+        $post->delete();
+
+        return back()->with('status', 'Post has been deleted sucessfully');
     }
 }
