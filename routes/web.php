@@ -7,3 +7,4 @@ Route::get('/posts/{slug}', [\App\Http\Controllers\PostController::class, 'detai
 Auth::routes();
 
 Route::post('/comment', [\App\Http\Controllers\CommentController::class, 'store'])->name('comments.store');
+Route::resource('/admin/posts', \App\Http\Controllers\PostController::class);
